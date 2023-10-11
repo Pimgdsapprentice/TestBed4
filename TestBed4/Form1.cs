@@ -11,9 +11,14 @@ namespace TestBed4
         static Random random = new Random();
         Syllable syllable = new Syllable();
         Phonemes phonemes = new Phonemes();
+
+        Dictionary<string, Phoneme> loadedConsonantDict = new Dictionary<string, Phoneme>();
+        Dictionary<string, Phoneme> loadedVowelDict = new Dictionary<string, Phoneme>();
         public Form1()
         {
             InitializeComponent();
+            loadedConsonantDict = phonemes.CphonDict;
+            loadedVowelDict = phonemes.VphonDict;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -51,6 +56,7 @@ namespace TestBed4
         };
 
 
+
         public bool stopstart(string output, string nextchar)
         {
             string lastChar = output[output.Length - 1].ToString();
@@ -66,80 +72,82 @@ namespace TestBed4
         private void met1()
         {
             int randomIndex = random.Next(syllable.SyllableTypeDict.Count);
-            string output = "";
-            
-            List<string> list = new List<string>() { "Stop", "Stop/Affricate" };
-            List<bool> list2 = new List<bool>();
-
-            foreach (bool isvowl in syllable.SyllableTypeDict.ElementAt(randomIndex).Value)
-            {
-                if (isvowl == true)
-                {
-                    randomIndex = random.Next(phonemes.VphonDict.Count);
-                    string randomKey = phonemes.VphonDict.Keys.ElementAt(randomIndex);
-                    output = output + phonemes.VphonDict[randomKey].EnglishTranslation;
-                }
-                else
-                {
-                    if (output.Length == 0)
-                    {
-                        randomIndex = random.Next(phonemes.CphonDict.Count);
-                        string randomKey = phonemes.CphonDict.Keys.ElementAt(randomIndex);
-                        output = output + phonemes.CphonDict[randomKey].EnglishTranslation;
-                    }
-                    else
-                    {
-                        bool nostop = true;
-                        string lastChar = output[output.Length - 1].ToString();
-
-                        //Bypass 1
-                        if (lastChar == "q")
-                        {
-                        }
-                        else if (stopCons.Contains(lastChar))
-                        {
-                            while (nostop)
-                            {
-                                randomIndex = random.Next(phonemes.CphonDict.Count);
-                                string randomKey = phonemes.CphonDict.Keys.ElementAt(randomIndex);
-                                string mannerOfArticulation = phonemes.CphonDict[randomKey].MannerOfArticulation;
-                                if (stoppair[lastChar].Contains(phonemes.CphonDict[randomKey].EnglishTranslation))
-                                {
-                                    output = output + phonemes.CphonDict[randomKey].EnglishTranslation;
-                                    nostop = false; // Set nostop to false to exit the loop
-                                }
-                            }
-                        }
-                        else if (consonantsSimp2.Contains(lastChar))
-                        {
-                            while (nostop)
-                            {
-                                randomIndex = random.Next(phonemes.CphonDict.Count);
-                                string randomKey = phonemes.CphonDict.Keys.ElementAt(randomIndex);
-                                string mannerOfArticulation = phonemes.CphonDict[randomKey].MannerOfArticulation;
-
-
-                                // Check if the manner of articulation is not in the list of stop types
-                                if (!list.Contains(mannerOfArticulation))
-                                {
-                                    output = output + phonemes.CphonDict[randomKey].EnglishTranslation;
-                                    nostop = false; // Set nostop to false to exit the loop
-                                }
-                            }
-                        }
-                        else
-                        {
-                            randomIndex = random.Next(phonemes.CphonDict.Count);
-                            string randomKey = phonemes.CphonDict.Keys.ElementAt(randomIndex);
-                            output = output + phonemes.CphonDict[randomKey].EnglishTranslation;
-                        }
-                        
-                    }
-                }
-            }
+            string output = GenerateSyllable(syllable.SyllableTypeDict.ElementAt(randomIndex));
 
             richTextBox1.AppendText(output + "\n");
         }
+
+        private string GenerateSyllable(KeyValuePair<string, List<bool>> syllableType)
+        {
+            string output = "";
+            foreach (bool isVowel in syllableType.Value)
+            {
+                if (isVowel)
+                {
+                    output += GenerateVowel();
+                }
+                else
+                {
+                    string lastChar = output.Length > 0 ? output[output.Length - 1].ToString() : "";
+                    output += GenerateConsonant(lastChar);
+                }
+            }
+            return output;
+        }
+
+        private string GenerateVowel()
+        {
+            int randomIndex = random.Next(phonemes.VphonDict.Count);
+            string randomKey = phonemes.VphonDict.Keys.ElementAt(randomIndex);
+            return phonemes.VphonDict[randomKey].EnglishTranslation;
+        }
+
+        private string GenerateConsonant(string lastChar)
+        {
+            if (lastChar == "q")
+            {
+                return "";
+            }
+
+            string[] consonantsSimp2 = new string[] { "b", "c", "d", "f", "h", "j", "l", "m", "n", "r", "s", "v", "w", "x", "y", "z" };
+            if (lastChar == "" || stopCons.Contains(lastChar))
+            {
+                return GenerateConsonantByMannerOfArticulation("Stop", consonantsSimp2);
+            }
+
+            if (consonantsSimp2.Contains(lastChar))
+            {
+                return GenerateConsonantByMannerOfArticulation("Stop/Affricate", consonantsSimp2);
+            }
+
+            return GenerateRandomConsonant();
+        }
+
+        private string GenerateConsonantByMannerOfArticulation(string mannerOfArticulation, string[] consonantsSimp2)
+        {
+            string output = "";
+            bool nostop = true;
+            while (nostop)
+            {
+                int randomIndex = random.Next(phonemes.CphonDict.Count);
+                string randomKey = phonemes.CphonDict.Keys.ElementAt(randomIndex);
+                string articulation = phonemes.CphonDict[randomKey].MannerOfArticulation;
+                if (articulation != mannerOfArticulation)
+                {
+                    output += phonemes.CphonDict[randomKey].EnglishTranslation;
+                    nostop = false;
+                }
+            }
+            return output;
+        }
+
+        private string GenerateRandomConsonant()
+        {
+            int randomIndex = random.Next(phonemes.CphonDict.Count);
+            string randomKey = phonemes.CphonDict.Keys.ElementAt(randomIndex);
+            return phonemes.CphonDict[randomKey].EnglishTranslation;
+        }
+
 
     }
 }
