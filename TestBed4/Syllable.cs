@@ -18,7 +18,7 @@ namespace TestBed4
             { "VCV", new List<bool> { true, false, true } },
             { "CVCV", new List<bool> { false, true, false, true } },
             { "CCVC", new List<bool> { false, false, true, false } },
-            { "CCVCC", new List<bool> { false, false, true, true, true } }
+            { "CCVCC", new List<bool> { false, false, true, false, false } }
         };
     }
 }
